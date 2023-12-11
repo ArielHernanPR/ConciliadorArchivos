@@ -21,7 +21,10 @@ def main(page: Page):
         global contadorDeArchivos
         contadorDeArchivos += 1
         actualizarBotonConciliarArchivos()
-        actualizarBotonPrimerArchivo()
+        actualizarBotonCargaArchivo(botonCargarPrimerArchivo)
+        actualizarEstadoBoton(botonSeleccionarPrimerArchivo, True)
+        actualizarEstadoBoton(botonBorrarPrimerArchivo, False)
+        botonBorrarPrimerArchivo.disabled = False
         if extensionPrimerArchivoSeleccionado.value == ".csv" or extensionPrimerArchivoSeleccionado.value == ".txt":
             df0 = pd.read_csv(primerArchivoSeleccionado.value, skip_blank_lines=skipFilasVaciasPrimerArchivo.value ,na_filter=quitarNaPrimerArchivo.value, sep=str(delimitadorPrimerArchivo.value) if delimitadorPrimerArchivo.value is not None else None, encoding=encodePrimerArchivo.value if encodePrimerArchivo.value is not None else None)
             return df0
@@ -34,6 +37,10 @@ def main(page: Page):
         global contadorDeArchivos
         contadorDeArchivos += 1
         actualizarBotonConciliarArchivos()
+        actualizarBotonCargaArchivo(botonCargarSegundoArchivo)
+        actualizarEstadoBoton(botonSeleccionarSegundoArchivo, True)
+        actualizarEstadoBoton(botonBorrarSegundoArchivo, False)
+        botonBorrarSegundoArchivo.disabled = False
         if extensionSegundoArchivoSeleccionado.value == ".csv" or extensionSegundoArchivoSeleccionado.value == ".txt":
             df1 = pd.read_csv(segundoArchivoSeleccionado.value, na_filter=quitarNaSegundoArchivo.value, skip_blank_lines=skipFilasVaciasSegundoArchivo.value, sep=str(delimitadorSegundoArchivo.value) if delimitadorSegundoArchivo.value is not None else None, encoding=encodeSegundoArchivo.value if encodeSegundoArchivo.value is not None else None)
             return df1
@@ -46,7 +53,20 @@ def main(page: Page):
         global contadorDeArchivos
         if contadorDeArchivos == 2:
             botonConciliarArchivos.disabled = False
+        else: 
+            botonConciliarArchivos.disabled = True
         botonConciliarArchivos.update()
+
+    def actualizarBotonCargaArchivo(boton):
+        boton.disabled = True
+        boton.text = "Cargado"
+        boton.bgcolor = "grey"
+        boton.color = "white"
+        boton.update()
+
+    def actualizarEstadoBoton(boton, disabled):
+        boton.disabled = disabled
+        boton.update()
 
     def conciliarAchivos():
         campos_a_conciliar = camposConciliables.value.split(",")
@@ -54,7 +74,6 @@ def main(page: Page):
         botonGuardarConciliacion.disabled = False
         botonGuardarConciliacion.update()
         return dfConciliado
-
 
     botonConciliarArchivos = ElevatedButton(
         disabled=True,
@@ -89,6 +108,8 @@ def main(page: Page):
         )
         extensionPrimerArchivoSeleccionado.value = primerArchivoSeleccionado.value[-4:]
         botonCargarPrimerArchivo.disabled = False
+        botonCargarPrimerArchivo.bgcolor = "#202429"
+        botonCargarPrimerArchivo.color = "#95bff0"
         primerArchivoSeleccionado.update()
         extensionPrimerArchivoSeleccionado.update()
         botonCargarPrimerArchivo.update()
@@ -98,6 +119,10 @@ def main(page: Page):
     primerArchivoSeleccionado = TextField(width=500, height=40)
     page.overlay.append(ventanaSeleccionArchivo_1)
 
+    botonSeleccionarPrimerArchivo = ElevatedButton(
+        text='Seleccionar Archivo',
+        on_click=lambda _: ventanaSeleccionArchivo_1.pick_files(allow_multiple=True),
+    )
 
     extensionPrimerArchivoSeleccionado = Text(size=20)
     delimitadorPrimerArchivo = TextField(width=50, height=40, text_align="center")
@@ -119,11 +144,28 @@ def main(page: Page):
         text="Cargar DF",
         on_click=lambda _: leerPrimerArchivo(),
     )
+    def borrarPrimerArchivo():
+        global contadorDeArchivos
+        contadorDeArchivos -= 1
 
-    def actualizarBotonPrimerArchivo():
-        botonCargarPrimerArchivo.bgcolor = "blue"
-        botonCargarPrimerArchivo.color = "white"
+        primerArchivoSeleccionado.value = ""
+        botonSeleccionarPrimerArchivo.disabled = False
+        botonCargarPrimerArchivo.text = "Cargar DF"
+        botonBorrarPrimerArchivo.disabled = True
+
+        primerArchivoSeleccionado.update()
+        botonSeleccionarPrimerArchivo.update()
         botonCargarPrimerArchivo.update()
+        botonBorrarPrimerArchivo.update()
+
+        actualizarBotonConciliarArchivos()
+
+    botonBorrarPrimerArchivo = ElevatedButton(
+        disabled = True,
+        text="Borrar Archivo",
+        on_click=lambda _: borrarPrimerArchivo(),
+    )
+
 
 #####################################################################################################################################################################
 ########################################################## METODOS Y VARIABLES SEGUNDO ARCHIVO ######################################################################
@@ -135,6 +177,8 @@ def main(page: Page):
             )
             extensionSegundoArchivoSeleccionado.value = segundoArchivoSeleccionado.value[-4:]
             botonCargarSegundoArchivo.disabled = False
+            botonCargarSegundoArchivo.bgcolor = "#202429"
+            botonCargarSegundoArchivo.color = "#95bff0"
             segundoArchivoSeleccionado.update()
             extensionSegundoArchivoSeleccionado.update()
             botonCargarSegundoArchivo.update()
@@ -144,6 +188,10 @@ def main(page: Page):
     segundoArchivoSeleccionado = TextField(width=500, height=40)
     page.overlay.append(ventanaSeleccionArchivo_2)
 
+    botonSeleccionarSegundoArchivo = ElevatedButton(
+        text='Seleccionar Archivo',
+        on_click=lambda _: ventanaSeleccionArchivo_2.pick_files(allow_multiple=True),
+    )
 
     extensionSegundoArchivoSeleccionado = Text(size=20)
     delimitadorSegundoArchivo = TextField(width=50, height=40, text_align="center")
@@ -166,6 +214,27 @@ def main(page: Page):
         on_click=lambda _: leerSegundoArchivo(),
     )
 
+    def borrarSegundoArchivo():
+        global contadorDeArchivos
+        contadorDeArchivos -= 1
+        
+        segundoArchivoSeleccionado.value = ""
+        botonSeleccionarSegundoArchivo.disabled = False
+        botonCargarSegundoArchivo.text = "Cargar DF"
+        botonBorrarSegundoArchivo.disabled = True
+
+        segundoArchivoSeleccionado.update()
+        botonSeleccionarSegundoArchivo.update()
+        botonCargarSegundoArchivo.update()
+        botonBorrarSegundoArchivo.update()
+
+        actualizarBotonConciliarArchivos()
+
+    botonBorrarSegundoArchivo = ElevatedButton(
+        disabled = True,
+        text="Borrar Archivo",
+        on_click=lambda _: borrarSegundoArchivo(),
+    )
 #####################################################################################################################################################################
 ########################################################## CARGA DE VARAIABLES A LA INTERFAZ ########################################################################
 #####################################################################################################################################################################
@@ -173,10 +242,7 @@ def main(page: Page):
     page.add(
         Row(
             controls=[
-                ElevatedButton(
-                text='Seleccionar Archivo',
-                on_click=lambda _: ventanaSeleccionArchivo_1.pick_files(allow_multiple=True),
-            ),
+                botonSeleccionarPrimerArchivo,
                 primerArchivoSeleccionado,
                 Text("Extension del archivo:"),
                 extensionPrimerArchivoSeleccionado,
@@ -202,15 +268,13 @@ def main(page: Page):
                 Text("Ignorar filas vacias"),
                 skipFilasVaciasPrimerArchivo,
                 botonCargarPrimerArchivo,
+                botonBorrarPrimerArchivo,
             ]
         ),
         Divider(),
         Row(
             controls=[
-                ElevatedButton(
-                text='Seleccionar Archivo',
-                on_click=lambda _: ventanaSeleccionArchivo_2.pick_files(allow_multiple=True),
-            ),
+                botonSeleccionarSegundoArchivo,
                 segundoArchivoSeleccionado,
                 Text("Extension del archivo:"),
                 extensionSegundoArchivoSeleccionado,
@@ -236,6 +300,7 @@ def main(page: Page):
                 Text("Ignorar filas vacias"),
                 skipFilasVaciasSegundoArchivo,
                 botonCargarSegundoArchivo,
+                botonBorrarSegundoArchivo,
             ]
         ),
         Divider(),
