@@ -13,7 +13,6 @@ def main(page: Page):
     listaEncodes = [dropdown.Option("UTF-8"), dropdown.Option("UTF-16"),dropdown.Option("UTF-32"),dropdown.Option("ISO-8859-1"),
         dropdown.Option("ISO-8859"),dropdown.Option("Windows-1252"),dropdown.Option("ASCII"),dropdown.Option("MacRoman")]
     
-    camposConciliables = TextField(width=500, height=40)
     global contadorDeArchivos
     contadorDeArchivos = 0
 
@@ -27,12 +26,16 @@ def main(page: Page):
         botonBorrarPrimerArchivo.disabled = False
         if extensionPrimerArchivoSeleccionado.value == ".csv" or extensionPrimerArchivoSeleccionado.value == ".txt":
             df0 = pd.read_csv(primerArchivoSeleccionado.value, skip_blank_lines=skipFilasVaciasPrimerArchivo.value ,na_filter=quitarNaPrimerArchivo.value, sep=str(delimitadorPrimerArchivo.value) if delimitadorPrimerArchivo.value is not None else None, encoding=encodePrimerArchivo.value if encodePrimerArchivo.value is not None else None)
+            if not columnaCamposPrimerArchivo.controls:
+                listarCamposPrimerArchivo(df0.columns)
             return df0
         if extensionPrimerArchivoSeleccionado.value == "xlsx":
             columnasEspecificadas = especificarColumnasPrimerArchivo.value.split(',') if especificarColumnasPrimerArchivo.value else None
             df0 = pd.read_excel(primerArchivoSeleccionado.value, na_filter=quitarNaPrimerArchivo.value, usecols=columnasEspecificadas if columnasEspecificadas else None)
+            if not columnaCamposPrimerArchivo.controls:
+                listarCamposPrimerArchivo(df0.columns)
             return df0
-        
+
     def leerSegundoArchivo():
         global contadorDeArchivos
         contadorDeArchivos += 1
@@ -43,12 +46,16 @@ def main(page: Page):
         botonBorrarSegundoArchivo.disabled = False
         if extensionSegundoArchivoSeleccionado.value == ".csv" or extensionSegundoArchivoSeleccionado.value == ".txt":
             df1 = pd.read_csv(segundoArchivoSeleccionado.value, na_filter=quitarNaSegundoArchivo.value, skip_blank_lines=skipFilasVaciasSegundoArchivo.value, sep=str(delimitadorSegundoArchivo.value) if delimitadorSegundoArchivo.value is not None else None, encoding=encodeSegundoArchivo.value if encodeSegundoArchivo.value is not None else None)
+            if not columnaCamposSegundoArchivo.controls:
+                listarCamposSegundoArchivo(df1.columns)
             return df1
         if extensionSegundoArchivoSeleccionado.value == "xlsx":
             columnasEspecificadas = especificarColumnasSegundoArchivo.value.split(',') if especificarColumnasSegundoArchivo.value else None
             df1 = pd.read_excel(segundoArchivoSeleccionado.value, na_filter=quitarNaSegundoArchivo.value,usecols=columnasEspecificadas if columnasEspecificadas else None)
+            if not columnaCamposSegundoArchivo.controls:
+                listarCamposSegundoArchivo(df1.columns)
             return df1
-
+    
     def actualizarBotonConciliarArchivos():
         global contadorDeArchivos
         if contadorDeArchivos == 2:
@@ -69,8 +76,17 @@ def main(page: Page):
         boton.update()
 
     def conciliarAchivos():
-        campos_a_conciliar = camposConciliables.value.split(",")
-        dfConciliado = pd.merge(leerPrimerArchivo(), leerSegundoArchivo(), on=campos_a_conciliar, how='inner')
+        camposConciliarPrimerArchivo = []
+        for i in range(len(columnaCamposPrimerArchivo.controls)):
+            if columnaCamposPrimerArchivo.controls[i].controls[0].value == True:
+                camposConciliarPrimerArchivo.append(columnaCamposPrimerArchivo.controls[i].controls[1].value)
+
+        camposConciliarSegundoArchivo = []
+        for i in range(len(columnaCamposSegundoArchivo.controls)):
+            if columnaCamposSegundoArchivo.controls[i].controls[0].value == True:
+                camposConciliarSegundoArchivo.append(columnaCamposSegundoArchivo.controls[i].controls[1].value)
+
+        dfConciliado = pd.merge(leerPrimerArchivo(), leerSegundoArchivo(), left_on=camposConciliarPrimerArchivo, right_on=camposConciliarSegundoArchivo, how='inner')
         botonGuardarConciliacion.disabled = False
         botonGuardarConciliacion.update()
         return dfConciliado
@@ -80,6 +96,7 @@ def main(page: Page):
         text="Conciliar",
         on_click=lambda _: conciliarAchivos(),
     )
+
     botonGuardarConciliacion = ElevatedButton(
         disabled=True,
         text="Descargar",
@@ -136,7 +153,7 @@ def main(page: Page):
 
     columnaIndicePrimerArchivo = TextField(width=50, height=40, text_align="center")
     quitarNaPrimerArchivo = Checkbox()
-    skipFilasVaciasPrimerArchivo = Checkbox()  # NO TIENE FUNCION TODAVIA
+    skipFilasVaciasPrimerArchivo = Checkbox()
     especificarColumnasPrimerArchivo = TextField(width=350, height=40, text_align="center")
 
     botonCargarPrimerArchivo = ElevatedButton(
@@ -152,11 +169,15 @@ def main(page: Page):
         botonSeleccionarPrimerArchivo.disabled = False
         botonCargarPrimerArchivo.text = "Cargar DF"
         botonBorrarPrimerArchivo.disabled = True
+        columnaCamposPrimerArchivo.controls.clear()
+        extensionPrimerArchivoSeleccionado.value = ""
 
         primerArchivoSeleccionado.update()
         botonSeleccionarPrimerArchivo.update()
         botonCargarPrimerArchivo.update()
         botonBorrarPrimerArchivo.update()
+        columnaCamposPrimerArchivo.update()
+        extensionPrimerArchivoSeleccionado.update()
 
         actualizarBotonConciliarArchivos()
 
@@ -165,8 +186,12 @@ def main(page: Page):
         text="Borrar Archivo",
         on_click=lambda _: borrarPrimerArchivo(),
     )
-
-
+    
+    columnaCamposPrimerArchivo = Column()
+    def listarCamposPrimerArchivo(listaCampos):
+        for i in listaCampos:
+            columnaCamposPrimerArchivo.controls.append(Row(controls=[Checkbox(), Text(value=i)]))
+        page.update()
 #####################################################################################################################################################################
 ########################################################## METODOS Y VARIABLES SEGUNDO ARCHIVO ######################################################################
 #####################################################################################################################################################################
@@ -205,7 +230,7 @@ def main(page: Page):
 
     columnaIndiceSegundoArchivo = TextField(width=50, height=40, text_align="center")
     quitarNaSegundoArchivo = Checkbox()
-    skipFilasVaciasSegundoArchivo = Checkbox()  # NO TIENE FUNCION TODAVIA
+    skipFilasVaciasSegundoArchivo = Checkbox()
     especificarColumnasSegundoArchivo = TextField(width=350, height=40, text_align="center")
 
     botonCargarSegundoArchivo = ElevatedButton(
@@ -222,11 +247,15 @@ def main(page: Page):
         botonSeleccionarSegundoArchivo.disabled = False
         botonCargarSegundoArchivo.text = "Cargar DF"
         botonBorrarSegundoArchivo.disabled = True
+        columnaCamposSegundoArchivo.controls.clear()
+        extensionSegundoArchivoSeleccionado.value = ""
 
         segundoArchivoSeleccionado.update()
         botonSeleccionarSegundoArchivo.update()
         botonCargarSegundoArchivo.update()
         botonBorrarSegundoArchivo.update()
+        columnaCamposSegundoArchivo.update()
+        extensionSegundoArchivoSeleccionado.update()
 
         actualizarBotonConciliarArchivos()
 
@@ -235,6 +264,12 @@ def main(page: Page):
         text="Borrar Archivo",
         on_click=lambda _: borrarSegundoArchivo(),
     )
+
+    columnaCamposSegundoArchivo = Column()
+    def listarCamposSegundoArchivo(listaCampos):
+        for i in listaCampos:
+            columnaCamposSegundoArchivo.controls.append(Row(controls=[Checkbox(), Text(value=i)]))
+        page.update()
 #####################################################################################################################################################################
 ########################################################## CARGA DE VARAIABLES A LA INTERFAZ ########################################################################
 #####################################################################################################################################################################
@@ -307,9 +342,15 @@ def main(page: Page):
         Row(
             controls=[
                 Text("Campos a conciliar"),
-                camposConciliables,
                 botonConciliarArchivos,
                 botonGuardarConciliacion
+            ]
+        ),
+        Row(
+            controls=[
+                columnaCamposPrimerArchivo,
+                columnaCamposSegundoArchivo,
+
             ]
         )
     )
