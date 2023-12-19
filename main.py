@@ -3,6 +3,15 @@ import flet
 from flet import *
 
 
+
+## TODO:    CONCILIACION REPITE FILAS SEGUN CANTIDAD MAX DE FILAS EN UNO DE SUS ARCHIVOS
+##          ENCODING, ES NECESARIO O CONVIENE AUTOMATIZAR CON PRUEBAS EN BUCLE?                
+##          MODIFICAR SEPARADORES PARA DAR OPCIONES YA PARAMETRIZADAS
+##          MANEJO DE ERRORES AL MOMENTO DE CONCILIAR ARCHIVO
+##          POR AHORA HACE COINCIDENCIAS 1 A 1, FUTURO DE COINCIDENCIAS VARIAS?
+
+
+
 def main(page: Page):
 
 #####################################################################################################################################################################
@@ -10,52 +19,69 @@ def main(page: Page):
 #####################################################################################################################################################################
 
 
-    listaEncodes = [dropdown.Option("UTF-8"), dropdown.Option("UTF-16"),dropdown.Option("UTF-32"),dropdown.Option("ISO-8859-1"),
-        dropdown.Option("ISO-8859"),dropdown.Option("Windows-1252"),dropdown.Option("ASCII"),dropdown.Option("MacRoman")]
+    listaEncodes = ["UTF-8", "UTF-16", "UTF-32", "ISO-8859-1", "ISO-8859", "Windows-1252", "ASCII", "MacRoman"]
     
     global contadorDeArchivos
     contadorDeArchivos = 0
 
     def leerPrimerArchivo():
         global contadorDeArchivos
-        contadorDeArchivos += 1
-        actualizarBotonConciliarArchivos()
-        actualizarBotonCargaArchivo(botonCargarPrimerArchivo)
-        actualizarEstadoBoton(botonSeleccionarPrimerArchivo, True)
-        actualizarEstadoBoton(botonBorrarPrimerArchivo, False)
-        botonBorrarPrimerArchivo.disabled = False
-        if extensionPrimerArchivoSeleccionado.value == ".csv" or extensionPrimerArchivoSeleccionado.value == ".txt":
-            df0 = pd.read_csv(primerArchivoSeleccionado.value, skip_blank_lines=skipFilasVaciasPrimerArchivo.value ,na_filter=quitarNaPrimerArchivo.value, sep=str(delimitadorPrimerArchivo.value) if delimitadorPrimerArchivo.value is not None else None, encoding=encodePrimerArchivo.value if encodePrimerArchivo.value is not None else None)
-            if not columnaCamposPrimerArchivo.controls:
-                listarCamposPrimerArchivo(df0.columns)
-            return df0
-        if extensionPrimerArchivoSeleccionado.value == "xlsx":
-            columnasEspecificadas = especificarColumnasPrimerArchivo.value.split(',') if especificarColumnasPrimerArchivo.value else None
-            df0 = pd.read_excel(primerArchivoSeleccionado.value, na_filter=quitarNaPrimerArchivo.value, usecols=columnasEspecificadas if columnasEspecificadas else None)
-            if not columnaCamposPrimerArchivo.controls:
-                listarCamposPrimerArchivo(df0.columns)
-            return df0
+        if contadorDeArchivos < 2:
+            contadorDeArchivos += 1
+            actualizarBotonConciliarArchivos()
+            actualizarBotonCargaArchivo(botonCargarPrimerArchivo)
+            actualizarEstadoBoton(botonSeleccionarPrimerArchivo, True)
+            actualizarEstadoBoton(botonBorrarPrimerArchivo, False)
+            botonBorrarPrimerArchivo.disabled = False
+            print(contadorDeArchivos)
+        if extensionPrimerArchivoSeleccionado.value.upper() == ".CSV" or extensionPrimerArchivoSeleccionado.value.upper() == ".TXT":
+            for i in listaEncodes:
+                try:
+                    df0 = pd.read_csv(primerArchivoSeleccionado.value, skip_blank_lines=skipFilasVaciasPrimerArchivo.value ,na_filter=quitarNaPrimerArchivo.value, sep=str(delimitadorPrimerArchivo.value) if delimitadorPrimerArchivo.value is not None else None, encoding=i)
+                    if not columnaCamposPrimerArchivo.controls:
+                        listarCamposPrimerArchivo(df0.columns)
+                    return df0
+                except:
+                    pass
+        if extensionPrimerArchivoSeleccionado.value.upper() == "XLSX":
+            try:
+                columnasEspecificadas = especificarColumnasPrimerArchivo.value.split(',') if especificarColumnasPrimerArchivo.value else None
+                df0 = pd.read_excel(primerArchivoSeleccionado.value, na_filter=quitarNaPrimerArchivo.value, usecols=columnasEspecificadas if columnasEspecificadas else None)
+                if not columnaCamposPrimerArchivo.controls:
+                    listarCamposPrimerArchivo(df0.columns)
+                return df0
+            except Exception as e:
+                print(e)
 
     def leerSegundoArchivo():
         global contadorDeArchivos
-        contadorDeArchivos += 1
-        actualizarBotonConciliarArchivos()
-        actualizarBotonCargaArchivo(botonCargarSegundoArchivo)
-        actualizarEstadoBoton(botonSeleccionarSegundoArchivo, True)
-        actualizarEstadoBoton(botonBorrarSegundoArchivo, False)
-        botonBorrarSegundoArchivo.disabled = False
-        if extensionSegundoArchivoSeleccionado.value == ".csv" or extensionSegundoArchivoSeleccionado.value == ".txt":
-            df1 = pd.read_csv(segundoArchivoSeleccionado.value, na_filter=quitarNaSegundoArchivo.value, skip_blank_lines=skipFilasVaciasSegundoArchivo.value, sep=str(delimitadorSegundoArchivo.value) if delimitadorSegundoArchivo.value is not None else None, encoding=encodeSegundoArchivo.value if encodeSegundoArchivo.value is not None else None)
-            if not columnaCamposSegundoArchivo.controls:
-                listarCamposSegundoArchivo(df1.columns)
-            return df1
-        if extensionSegundoArchivoSeleccionado.value == "xlsx":
-            columnasEspecificadas = especificarColumnasSegundoArchivo.value.split(',') if especificarColumnasSegundoArchivo.value else None
-            df1 = pd.read_excel(segundoArchivoSeleccionado.value, na_filter=quitarNaSegundoArchivo.value,usecols=columnasEspecificadas if columnasEspecificadas else None)
-            if not columnaCamposSegundoArchivo.controls:
-                listarCamposSegundoArchivo(df1.columns)
-            return df1
-    
+        if contadorDeArchivos < 2:
+            contadorDeArchivos += 1
+            actualizarBotonConciliarArchivos()
+            actualizarBotonCargaArchivo(botonCargarSegundoArchivo)
+            actualizarEstadoBoton(botonSeleccionarSegundoArchivo, True)
+            actualizarEstadoBoton(botonBorrarSegundoArchivo, False)
+            botonBorrarSegundoArchivo.disabled = False
+            print(contadorDeArchivos)
+        if extensionSegundoArchivoSeleccionado.value.upper() == ".CSV" or extensionSegundoArchivoSeleccionado.value.upper() == ".TXT":
+            for i in listaEncodes:
+                try:
+                    df1 = pd.read_csv(segundoArchivoSeleccionado.value, na_filter=quitarNaSegundoArchivo.value, skip_blank_lines=skipFilasVaciasSegundoArchivo.value, sep=str(delimitadorSegundoArchivo.value) if delimitadorSegundoArchivo.value is not None else None, encoding=i)
+                    if not columnaCamposSegundoArchivo.controls:
+                        listarCamposSegundoArchivo(df1.columns)
+                    return df1
+                except:
+                    pass
+        if extensionSegundoArchivoSeleccionado.value.upper() == "XLSX":
+            try:
+                columnasEspecificadas = especificarColumnasSegundoArchivo.value.split(',') if especificarColumnasSegundoArchivo.value else None
+                df1 = pd.read_excel(segundoArchivoSeleccionado.value, na_filter=quitarNaSegundoArchivo.value,usecols=columnasEspecificadas if columnasEspecificadas else None)
+                if not columnaCamposSegundoArchivo.controls:
+                    listarCamposSegundoArchivo(df1.columns)
+                return df1
+            except Exception as e:
+                print(e)
+
     def actualizarBotonConciliarArchivos():
         global contadorDeArchivos
         if contadorDeArchivos == 2:
@@ -77,18 +103,20 @@ def main(page: Page):
 
     def conciliarAchivos():
         camposConciliarPrimerArchivo = []
-        for i in range(len(columnaCamposPrimerArchivo.controls)):
+        for i in range(1,len(columnaCamposPrimerArchivo.controls)):
             if columnaCamposPrimerArchivo.controls[i].controls[0].value == True:
                 camposConciliarPrimerArchivo.append(columnaCamposPrimerArchivo.controls[i].controls[1].value)
 
         camposConciliarSegundoArchivo = []
-        for i in range(len(columnaCamposSegundoArchivo.controls)):
+        for i in range(1,len(columnaCamposSegundoArchivo.controls)):
             if columnaCamposSegundoArchivo.controls[i].controls[0].value == True:
                 camposConciliarSegundoArchivo.append(columnaCamposSegundoArchivo.controls[i].controls[1].value)
 
         dfConciliado = pd.merge(leerPrimerArchivo(), leerSegundoArchivo(), left_on=camposConciliarPrimerArchivo, right_on=camposConciliarSegundoArchivo, how='inner')
         botonGuardarConciliacion.disabled = False
+        botonBorrarInputs.disabled = False
         botonGuardarConciliacion.update()
+        botonBorrarInputs.update()
         return dfConciliado
 
     botonConciliarArchivos = ElevatedButton(
@@ -115,6 +143,23 @@ def main(page: Page):
     ventanaGuardarConciliacion = FilePicker(on_result=save_files)
     page.overlay.append(ventanaGuardarConciliacion)
 
+
+    def borrarInputsCliente():
+        borrarPrimerArchivo()
+        borrarSegundoArchivo()
+        botonGuardarConciliacion.disabled = True
+        botonConciliarArchivos.disabled = True
+        botonBorrarInputs.disabled = True
+        botonBorrarInputs.update()
+        botonGuardarConciliacion.update()
+        botonConciliarArchivos.update()
+
+    botonBorrarInputs = ElevatedButton(
+        disabled=True,
+        text="Limpiar Datos",
+        on_click= lambda _:borrarInputsCliente()
+    )
+
 #####################################################################################################################################################################
 ########################################################## METODOS Y VARIABLES PRIMER ARCHIVO #######################################################################
 #####################################################################################################################################################################
@@ -133,7 +178,7 @@ def main(page: Page):
 
     ventanaSeleccionArchivo_1 = FilePicker(on_result=pick_files_result_1)
 
-    primerArchivoSeleccionado = TextField(width=500, height=40)
+    primerArchivoSeleccionado = TextField(width=500, height=40, border="underline")
     page.overlay.append(ventanaSeleccionArchivo_1)
 
     botonSeleccionarPrimerArchivo = ElevatedButton(
@@ -143,12 +188,6 @@ def main(page: Page):
 
     extensionPrimerArchivoSeleccionado = Text(size=20)
     delimitadorPrimerArchivo = TextField(width=50, height=40, text_align="center")
-    encodePrimerArchivo = Dropdown(
-        hint_text="Tipo de Encoding",
-        height=50,
-        text_size=12,
-        options= listaEncodes
-    )
     headerPrimerArchivo = TextField(width=50, height=40, text_align="center")
 
     columnaIndicePrimerArchivo = TextField(width=50, height=40, text_align="center")
@@ -180,6 +219,7 @@ def main(page: Page):
         extensionPrimerArchivoSeleccionado.update()
 
         actualizarBotonConciliarArchivos()
+        print(contadorDeArchivos)
 
     botonBorrarPrimerArchivo = ElevatedButton(
         disabled = True,
@@ -188,7 +228,9 @@ def main(page: Page):
     )
     
     columnaCamposPrimerArchivo = Column()
+    
     def listarCamposPrimerArchivo(listaCampos):
+        columnaCamposPrimerArchivo.controls.append(Row(controls=[Text("Campos del Primer Archivo")]))
         for i in listaCampos:
             columnaCamposPrimerArchivo.controls.append(Row(controls=[Checkbox(), Text(value=i)]))
         page.update()
@@ -220,12 +262,6 @@ def main(page: Page):
 
     extensionSegundoArchivoSeleccionado = Text(size=20)
     delimitadorSegundoArchivo = TextField(width=50, height=40, text_align="center")
-    encodeSegundoArchivo = Dropdown(
-                    hint_text="Tipo de Encoding",
-                    height=50,
-                    text_size=12,
-                    options= listaEncodes
-                )
     headerSegundoArchivo = TextField(width=50, height=40, text_align="center")
 
     columnaIndiceSegundoArchivo = TextField(width=50, height=40, text_align="center")
@@ -258,6 +294,7 @@ def main(page: Page):
         extensionSegundoArchivoSeleccionado.update()
 
         actualizarBotonConciliarArchivos()
+        print(contadorDeArchivos)
 
     botonBorrarSegundoArchivo = ElevatedButton(
         disabled = True,
@@ -266,7 +303,9 @@ def main(page: Page):
     )
 
     columnaCamposSegundoArchivo = Column()
+
     def listarCamposSegundoArchivo(listaCampos):
+        columnaCamposSegundoArchivo.controls.append(Row(controls=[Text("Campos del Segundo Archivo")]))
         for i in listaCampos:
             columnaCamposSegundoArchivo.controls.append(Row(controls=[Checkbox(), Text(value=i)]))
         page.update()
@@ -287,7 +326,6 @@ def main(page: Page):
             controls=[
                 Text("Delimitador:"),
                 delimitadorPrimerArchivo,
-                encodePrimerArchivo,
                 Text("Header:"),
                 headerPrimerArchivo,
                 Text("Columna Indice:"),
@@ -319,7 +357,6 @@ def main(page: Page):
             controls=[
                 Text("Delimitador:"),
                 delimitadorSegundoArchivo,
-                encodeSegundoArchivo,
                 Text("Header:"),
                 headerSegundoArchivo,
                 Text("Columna Indice:"),
@@ -341,9 +378,9 @@ def main(page: Page):
         Divider(),
         Row(
             controls=[
-                Text("Campos a conciliar"),
                 botonConciliarArchivos,
-                botonGuardarConciliacion
+                botonGuardarConciliacion,
+                botonBorrarInputs
             ]
         ),
         Row(
