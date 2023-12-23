@@ -4,11 +4,9 @@ from flet import *
 
 
 
-## TODO:    CONCILIACION REPITE FILAS SEGUN CANTIDAD MAX DE FILAS EN UNO DE SUS ARCHIVOS
-##          ENCODING, ES NECESARIO O CONVIENE AUTOMATIZAR CON PRUEBAS EN BUCLE?                
-##          MODIFICAR SEPARADORES PARA DAR OPCIONES YA PARAMETRIZADAS
-##          MANEJO DE ERRORES AL MOMENTO DE CONCILIAR ARCHIVO
+## TODO:    CONCILIACION REPITE FILAS SEGUN CANTIDAD MAX DE FILAS EN UNO DE SUS ARCHIVOS | SEGUIR CORRECCION             
 ##          POR AHORA HACE COINCIDENCIAS 1 A 1, FUTURO DE COINCIDENCIAS VARIAS?
+##          MANEJO DE ERRORES AL MOMENTO DE CONCILIAR ARCHIVO
 
 
 
@@ -20,9 +18,33 @@ def main(page: Page):
 
 
     listaEncodes = ["UTF-8", "UTF-16", "UTF-32", "ISO-8859-1", "ISO-8859", "Windows-1252", "ASCII", "MacRoman"]
+    separadoresComunes = [dropdown.Option(text="'    \t'"), dropdown.Option(text=","), dropdown.Option(text=";"), dropdown.Option(text="' '"), dropdown.Option(text="|"),
+        dropdown.Option(text=":"), dropdown.Option(text="_"), dropdown.Option(text="-"), dropdown.Option(text="/")] 
     
     global contadorDeArchivos
     contadorDeArchivos = 0
+
+    def devolverValorSeparador(elemento):
+        if elemento.value == "'    \t'":
+            return "\t"
+        elif elemento.value == ",":
+            return ","
+        elif elemento.value == ";":
+            return ";"
+        elif elemento.value == "' '":
+            return " "
+        elif elemento.value == "|":
+            return "|"
+        elif elemento.value == "_":
+            return "_"
+        elif elemento.value == ":":
+            return ":"
+        elif elemento.value == "/":
+            return "/"
+        elif elemento.value == "-":
+            return "-"
+        else:
+            return None
 
     def leerPrimerArchivo():
         global contadorDeArchivos
@@ -33,11 +55,10 @@ def main(page: Page):
             actualizarEstadoBoton(botonSeleccionarPrimerArchivo, True)
             actualizarEstadoBoton(botonBorrarPrimerArchivo, False)
             botonBorrarPrimerArchivo.disabled = False
-            print(contadorDeArchivos)
         if extensionPrimerArchivoSeleccionado.value.upper() == ".CSV" or extensionPrimerArchivoSeleccionado.value.upper() == ".TXT":
             for i in listaEncodes:
                 try:
-                    df0 = pd.read_csv(primerArchivoSeleccionado.value, skip_blank_lines=skipFilasVaciasPrimerArchivo.value ,na_filter=quitarNaPrimerArchivo.value, sep=str(delimitadorPrimerArchivo.value) if delimitadorPrimerArchivo.value is not None else None, encoding=i)
+                    df0 = pd.read_csv(primerArchivoSeleccionado.value, skip_blank_lines=skipFilasVaciasPrimerArchivo.value ,na_filter=quitarNaPrimerArchivo.value, sep=devolverValorSeparador(separadorPrimerArchivo), encoding=i)
                     if not columnaCamposPrimerArchivo.controls:
                         listarCamposPrimerArchivo(df0.columns)
                     return df0
@@ -62,11 +83,10 @@ def main(page: Page):
             actualizarEstadoBoton(botonSeleccionarSegundoArchivo, True)
             actualizarEstadoBoton(botonBorrarSegundoArchivo, False)
             botonBorrarSegundoArchivo.disabled = False
-            print(contadorDeArchivos)
         if extensionSegundoArchivoSeleccionado.value.upper() == ".CSV" or extensionSegundoArchivoSeleccionado.value.upper() == ".TXT":
             for i in listaEncodes:
                 try:
-                    df1 = pd.read_csv(segundoArchivoSeleccionado.value, na_filter=quitarNaSegundoArchivo.value, skip_blank_lines=skipFilasVaciasSegundoArchivo.value, sep=str(delimitadorSegundoArchivo.value) if delimitadorSegundoArchivo.value is not None else None, encoding=i)
+                    df1 = pd.read_csv(segundoArchivoSeleccionado.value, na_filter=quitarNaSegundoArchivo.value, skip_blank_lines=skipFilasVaciasSegundoArchivo.value, sep=devolverValorSeparador(separadorSegundoArchivo), encoding=i)
                     if not columnaCamposSegundoArchivo.controls:
                         listarCamposSegundoArchivo(df1.columns)
                     return df1
@@ -113,6 +133,9 @@ def main(page: Page):
                 camposConciliarSegundoArchivo.append(columnaCamposSegundoArchivo.controls[i].controls[1].value)
 
         dfConciliado = pd.merge(leerPrimerArchivo(), leerSegundoArchivo(), left_on=camposConciliarPrimerArchivo, right_on=camposConciliarSegundoArchivo, how='inner')
+        dfConciliado = dfConciliado.drop_duplicates(subset=camposConciliarPrimerArchivo).reset_index(drop=True)
+
+
         botonGuardarConciliacion.disabled = False
         botonBorrarInputs.disabled = False
         botonGuardarConciliacion.update()
@@ -187,7 +210,7 @@ def main(page: Page):
     )
 
     extensionPrimerArchivoSeleccionado = Text(size=20)
-    delimitadorPrimerArchivo = TextField(width=50, height=40, text_align="center")
+    separadorPrimerArchivo = Dropdown(options=separadoresComunes, hint_text="Seleccione el seperador")
     headerPrimerArchivo = TextField(width=50, height=40, text_align="center")
 
     columnaIndicePrimerArchivo = TextField(width=50, height=40, text_align="center")
@@ -210,6 +233,7 @@ def main(page: Page):
         botonBorrarPrimerArchivo.disabled = True
         columnaCamposPrimerArchivo.controls.clear()
         extensionPrimerArchivoSeleccionado.value = ""
+        separadorPrimerArchivo.value = ""
 
         primerArchivoSeleccionado.update()
         botonSeleccionarPrimerArchivo.update()
@@ -217,9 +241,9 @@ def main(page: Page):
         botonBorrarPrimerArchivo.update()
         columnaCamposPrimerArchivo.update()
         extensionPrimerArchivoSeleccionado.update()
+        separadorPrimerArchivo.update()
 
         actualizarBotonConciliarArchivos()
-        print(contadorDeArchivos)
 
     botonBorrarPrimerArchivo = ElevatedButton(
         disabled = True,
@@ -261,7 +285,7 @@ def main(page: Page):
     )
 
     extensionSegundoArchivoSeleccionado = Text(size=20)
-    delimitadorSegundoArchivo = TextField(width=50, height=40, text_align="center")
+    separadorSegundoArchivo = Dropdown(options=separadoresComunes, hint_text="Seleccione el separador")
     headerSegundoArchivo = TextField(width=50, height=40, text_align="center")
 
     columnaIndiceSegundoArchivo = TextField(width=50, height=40, text_align="center")
@@ -285,6 +309,7 @@ def main(page: Page):
         botonBorrarSegundoArchivo.disabled = True
         columnaCamposSegundoArchivo.controls.clear()
         extensionSegundoArchivoSeleccionado.value = ""
+        separadorSegundoArchivo.value = ""
 
         segundoArchivoSeleccionado.update()
         botonSeleccionarSegundoArchivo.update()
@@ -292,9 +317,9 @@ def main(page: Page):
         botonBorrarSegundoArchivo.update()
         columnaCamposSegundoArchivo.update()
         extensionSegundoArchivoSeleccionado.update()
+        separadorSegundoArchivo.update()
 
         actualizarBotonConciliarArchivos()
-        print(contadorDeArchivos)
 
     botonBorrarSegundoArchivo = ElevatedButton(
         disabled = True,
@@ -325,7 +350,7 @@ def main(page: Page):
         Row(
             controls=[
                 Text("Delimitador:"),
-                delimitadorPrimerArchivo,
+                separadorPrimerArchivo,
                 Text("Header:"),
                 headerPrimerArchivo,
                 Text("Columna Indice:"),
@@ -356,7 +381,7 @@ def main(page: Page):
         Row(
             controls=[
                 Text("Delimitador:"),
-                delimitadorSegundoArchivo,
+                separadorSegundoArchivo,
                 Text("Header:"),
                 headerSegundoArchivo,
                 Text("Columna Indice:"),
