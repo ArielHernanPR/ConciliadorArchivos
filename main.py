@@ -2,10 +2,8 @@ import pandas as pd
 import flet
 from flet import *
 
-
-
-## TODO:    CONCILIACION REPITE FILAS SEGUN CANTIDAD MAX DE FILAS EN UNO DE SUS ARCHIVOS | SEGUIR CORRECCION             
-##          POR AHORA HACE COINCIDENCIAS 1 A 1, FUTURO DE COINCIDENCIAS VARIAS?
+       
+## TODO:    POR AHORA HACE COINCIDENCIAS 1 A 1, FUTURO DE COINCIDENCIAS VARIAS?
 ##          MANEJO DE ERRORES AL MOMENTO DE CONCILIAR ARCHIVO
 
 
@@ -133,7 +131,7 @@ def main(page: Page):
                 camposConciliarSegundoArchivo.append(columnaCamposSegundoArchivo.controls[i].controls[1].value)
 
         dfConciliado = pd.merge(leerPrimerArchivo(), leerSegundoArchivo(), left_on=camposConciliarPrimerArchivo, right_on=camposConciliarSegundoArchivo, how='inner')
-        dfConciliado = dfConciliado.drop_duplicates(subset=camposConciliarPrimerArchivo).reset_index(drop=True)
+        dfConciliado = dfConciliado.drop_duplicates().reset_index(drop=True)
 
 
         botonGuardarConciliacion.disabled = False
