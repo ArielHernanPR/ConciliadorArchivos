@@ -4,7 +4,8 @@ from flet import *
 
        
 ## TODO:    POR AHORA HACE COINCIDENCIAS 1 A 1, FUTURO DE COINCIDENCIAS VARIAS?
-##          MANEJO DE ERRORES AL MOMENTO DE CONCILIAR ARCHIVO
+##          CONTROL DE TIPOS DE DATOS
+##          REFACTORIZAR
 
 
 
@@ -120,25 +121,29 @@ def main(page: Page):
         boton.update()
 
     def conciliarAchivos():
-        camposConciliarPrimerArchivo = []
-        for i in range(1,len(columnaCamposPrimerArchivo.controls)):
-            if columnaCamposPrimerArchivo.controls[i].controls[0].value == True:
-                camposConciliarPrimerArchivo.append(columnaCamposPrimerArchivo.controls[i].controls[1].value)
+        try:
+            camposConciliarPrimerArchivo = []
+            for i in range(1,len(columnaCamposPrimerArchivo.controls)):
+                if columnaCamposPrimerArchivo.controls[i].controls[0].value == True:
+                    camposConciliarPrimerArchivo.append(columnaCamposPrimerArchivo.controls[i].controls[1].value)
 
-        camposConciliarSegundoArchivo = []
-        for i in range(1,len(columnaCamposSegundoArchivo.controls)):
-            if columnaCamposSegundoArchivo.controls[i].controls[0].value == True:
-                camposConciliarSegundoArchivo.append(columnaCamposSegundoArchivo.controls[i].controls[1].value)
+            camposConciliarSegundoArchivo = []
+            for i in range(1,len(columnaCamposSegundoArchivo.controls)):
+                if columnaCamposSegundoArchivo.controls[i].controls[0].value == True:
+                    camposConciliarSegundoArchivo.append(columnaCamposSegundoArchivo.controls[i].controls[1].value)
 
-        dfConciliado = pd.merge(leerPrimerArchivo(), leerSegundoArchivo(), left_on=camposConciliarPrimerArchivo, right_on=camposConciliarSegundoArchivo, how='inner')
-        dfConciliado = dfConciliado.drop_duplicates().reset_index(drop=True)
+            dfConciliado = pd.merge(leerPrimerArchivo(), leerSegundoArchivo(), left_on=camposConciliarPrimerArchivo, right_on=camposConciliarSegundoArchivo, how='inner')
+            dfConciliado = dfConciliado.drop_duplicates().reset_index(drop=True)
 
-
-        botonGuardarConciliacion.disabled = False
-        botonBorrarInputs.disabled = False
-        botonGuardarConciliacion.update()
-        botonBorrarInputs.update()
-        return dfConciliado
+            botonGuardarConciliacion.disabled = False
+            botonBorrarInputs.disabled = False
+            botonConciliarArchivos.disabled = True
+            botonConciliarArchivos.update()
+            botonGuardarConciliacion.update()
+            botonBorrarInputs.update()
+            return dfConciliado
+        except:
+            AlertDialog(title="Error en Conciliacion", content=Text("No se pudieron conciliar los archivos"))
 
     botonConciliarArchivos = ElevatedButton(
         disabled=True,
