@@ -3,7 +3,7 @@ import flet
 from flet import *
 
        
-## TODO:    POR AHORA HACE COINCIDENCIAS 1 A 1, FUTURO DE COINCIDENCIAS VARIAS?
+## TODO:    POR AHORA HACE COINCIDENCIAS 1 A 1, FUTURO DE COINCIDENCIAS VARIAS? // FUNCIONES DE AGRUPACION
 ##          CONTROL DE TIPOS DE DATOS
 ##          REFACTORIZAR
 
@@ -11,6 +11,7 @@ from flet import *
 
 def main(page: Page):
 
+    page.padding = 0
 #####################################################################################################################################################################
 ############################################################### METODOS Y VARIABLES GENERALES #######################################################################
 #####################################################################################################################################################################
@@ -57,7 +58,7 @@ def main(page: Page):
         if extensionPrimerArchivoSeleccionado.value.upper() == ".CSV" or extensionPrimerArchivoSeleccionado.value.upper() == ".TXT":
             for i in listaEncodes:
                 try:
-                    df0 = pd.read_csv(primerArchivoSeleccionado.value, skip_blank_lines=skipFilasVaciasPrimerArchivo.value ,na_filter=quitarNaPrimerArchivo.value, sep=devolverValorSeparador(separadorPrimerArchivo), encoding=i)
+                    df0 = pd.read_csv(primerArchivoSeleccionado.value, skip_blank_lines=skipFilasVaciasPrimerArchivo.value, na_filter=quitarNaPrimerArchivo.value, sep=devolverValorSeparador(separadorPrimerArchivo), encoding=i)
                     if not columnaCamposPrimerArchivo.controls:
                         listarCamposPrimerArchivo(df0.columns)
                     return df0
@@ -146,12 +147,16 @@ def main(page: Page):
             AlertDialog(title="Error en Conciliacion", content=Text("No se pudieron conciliar los archivos"))
 
     botonConciliarArchivos = ElevatedButton(
+        bgcolor="#ff9755",
+        color= "#192543",
         disabled=True,
         text="Conciliar",
         on_click=lambda _: conciliarAchivos(),
     )
 
     botonGuardarConciliacion = ElevatedButton(
+        bgcolor="#ff9755",
+        color= "#192543",
         disabled=True,
         text="Descargar",
         on_click=lambda _: ventanaGuardarConciliacion.save_file(allowed_extensions=["xlsx","csv"]),
@@ -181,6 +186,8 @@ def main(page: Page):
         botonConciliarArchivos.update()
 
     botonBorrarInputs = ElevatedButton(
+        bgcolor="#ff9755",
+        color= "#192543",
         disabled=True,
         text="Limpiar Datos",
         on_click= lambda _:borrarInputsCliente()
@@ -196,32 +203,36 @@ def main(page: Page):
         )
         extensionPrimerArchivoSeleccionado.value = primerArchivoSeleccionado.value[-4:]
         botonCargarPrimerArchivo.disabled = False
-        botonCargarPrimerArchivo.bgcolor = "#202429"
-        botonCargarPrimerArchivo.color = "#95bff0"
+        botonCargarPrimerArchivo.bgcolor = "#ff9755"
+        botonCargarPrimerArchivo.color = "#192543"
         primerArchivoSeleccionado.update()
         extensionPrimerArchivoSeleccionado.update()
         botonCargarPrimerArchivo.update()
 
     ventanaSeleccionArchivo_1 = FilePicker(on_result=pick_files_result_1)
 
-    primerArchivoSeleccionado = TextField(width=500, height=40, border="underline")
+    primerArchivoSeleccionado = TextField(width=500, height=40, border="underline", border_color="#ff9755")
     page.overlay.append(ventanaSeleccionArchivo_1)
 
     botonSeleccionarPrimerArchivo = ElevatedButton(
+        bgcolor="#ff9755",
+        color= "#192543",
         text='Seleccionar Archivo',
         on_click=lambda _: ventanaSeleccionArchivo_1.pick_files(allow_multiple=True),
     )
 
     extensionPrimerArchivoSeleccionado = Text(size=20)
-    separadorPrimerArchivo = Dropdown(options=separadoresComunes, hint_text="Seleccione el seperador")
-    headerPrimerArchivo = TextField(width=50, height=40, text_align="center")
+    separadorPrimerArchivo = Dropdown(options=separadoresComunes, hint_text="Seleccione el seperador",border_color="#ff9755")
+    headerPrimerArchivo = TextField(width=50, height=40, text_align="center", border_color="#ff9755")                               ## Aun no tiene funcion en la lectura de archivos
 
-    columnaIndicePrimerArchivo = TextField(width=50, height=40, text_align="center")
-    quitarNaPrimerArchivo = Checkbox()
-    skipFilasVaciasPrimerArchivo = Checkbox()
-    especificarColumnasPrimerArchivo = TextField(width=350, height=40, text_align="center")
+    columnaIndicePrimerArchivo = TextField(width=50, height=40, text_align="center", border_color="#ff9755")
+    quitarNaPrimerArchivo = Checkbox(check_color="#192543", active_color="#ff9755")
+    skipFilasVaciasPrimerArchivo = Checkbox(check_color="#192543", active_color="#ff9755")
+    especificarColumnasPrimerArchivo = TextField(width=350, height=40, text_align="center", border_color="#ff9755")
 
     botonCargarPrimerArchivo = ElevatedButton(
+        bgcolor="#ff9755",
+        color= "#192543",
         disabled = True,
         text="Cargar DF",
         on_click=lambda _: leerPrimerArchivo(),
@@ -249,17 +260,21 @@ def main(page: Page):
         actualizarBotonConciliarArchivos()
 
     botonBorrarPrimerArchivo = ElevatedButton(
+        bgcolor="#ff9755",
+        color= "#192543",
         disabled = True,
         text="Borrar Archivo",
         on_click=lambda _: borrarPrimerArchivo(),
     )
-    
+
     columnaCamposPrimerArchivo = Column()
     
     def listarCamposPrimerArchivo(listaCampos):
         columnaCamposPrimerArchivo.controls.append(Row(controls=[Text("Campos del Primer Archivo")]))
+        contador = 0
         for i in listaCampos:
-            columnaCamposPrimerArchivo.controls.append(Row(controls=[Checkbox(), Text(value=i)]))
+            contador += 5
+            columnaCamposPrimerArchivo.controls.append(Row(controls=[Checkbox(check_color="#192543", active_color="#ff9755"), Text(value=i)]))
         page.update()
 #####################################################################################################################################################################
 ########################################################## METODOS Y VARIABLES SEGUNDO ARCHIVO ######################################################################
@@ -271,32 +286,36 @@ def main(page: Page):
             )
             extensionSegundoArchivoSeleccionado.value = segundoArchivoSeleccionado.value[-4:]
             botonCargarSegundoArchivo.disabled = False
-            botonCargarSegundoArchivo.bgcolor = "#202429"
-            botonCargarSegundoArchivo.color = "#95bff0"
+            botonCargarSegundoArchivo.bgcolor = "#ff9755"
+            botonCargarSegundoArchivo.color = "#192543"
             segundoArchivoSeleccionado.update()
             extensionSegundoArchivoSeleccionado.update()
             botonCargarSegundoArchivo.update()
 
     ventanaSeleccionArchivo_2 = FilePicker(on_result=pick_files_result_2)
 
-    segundoArchivoSeleccionado = TextField(width=500, height=40)
+    segundoArchivoSeleccionado = TextField(width=500, height=40, border="underline", border_color="#ff9755")
     page.overlay.append(ventanaSeleccionArchivo_2)
 
     botonSeleccionarSegundoArchivo = ElevatedButton(
+        bgcolor="#ff9755",
+        color= "#192543",
         text='Seleccionar Archivo',
         on_click=lambda _: ventanaSeleccionArchivo_2.pick_files(allow_multiple=True),
     )
 
     extensionSegundoArchivoSeleccionado = Text(size=20)
-    separadorSegundoArchivo = Dropdown(options=separadoresComunes, hint_text="Seleccione el separador")
-    headerSegundoArchivo = TextField(width=50, height=40, text_align="center")
+    separadorSegundoArchivo = Dropdown(options=separadoresComunes, hint_text="Seleccione el separador",border_color="#ff9755")
+    headerSegundoArchivo = TextField(width=50, height=40, text_align="center", border_color="#ff9755")
 
-    columnaIndiceSegundoArchivo = TextField(width=50, height=40, text_align="center")
-    quitarNaSegundoArchivo = Checkbox()
-    skipFilasVaciasSegundoArchivo = Checkbox()
-    especificarColumnasSegundoArchivo = TextField(width=350, height=40, text_align="center")
+    columnaIndiceSegundoArchivo = TextField(width=50, height=40, text_align="center", border_color="#ff9755")
+    quitarNaSegundoArchivo = Checkbox(check_color="#192543", active_color="#ff9755")
+    skipFilasVaciasSegundoArchivo = Checkbox(check_color="#192543", active_color="#ff9755")
+    especificarColumnasSegundoArchivo = TextField(width=350, height=40, text_align="center", border_color="#ff9755")
 
     botonCargarSegundoArchivo = ElevatedButton(
+        bgcolor="#ff9755",
+        color= "#192543",
         disabled = True,
         text="Cargar DF",
         on_click=lambda _: leerSegundoArchivo(),
@@ -325,6 +344,8 @@ def main(page: Page):
         actualizarBotonConciliarArchivos()
 
     botonBorrarSegundoArchivo = ElevatedButton(
+        bgcolor="#ff9755",
+        color= "#192543",
         disabled = True,
         text="Borrar Archivo",
         on_click=lambda _: borrarSegundoArchivo(),
@@ -335,88 +356,116 @@ def main(page: Page):
     def listarCamposSegundoArchivo(listaCampos):
         columnaCamposSegundoArchivo.controls.append(Row(controls=[Text("Campos del Segundo Archivo")]))
         for i in listaCampos:
-            columnaCamposSegundoArchivo.controls.append(Row(controls=[Checkbox(), Text(value=i)]))
+            columnaCamposSegundoArchivo.controls.append(Row(controls=[Checkbox(check_color="#192543", active_color="#ff9755"), Text(value=i)]))
         page.update()
 #####################################################################################################################################################################
 ########################################################## CARGA DE VARAIABLES A LA INTERFAZ ########################################################################
 #####################################################################################################################################################################
 
     page.add(
-        Row(
-            controls=[
-                botonSeleccionarPrimerArchivo,
-                primerArchivoSeleccionado,
-                Text("Extension del archivo:"),
-                extensionPrimerArchivoSeleccionado,
-            ],
-        ),
-        Row(
-            controls=[
-                Text("Delimitador:"),
-                separadorPrimerArchivo,
-                Text("Header:"),
-                headerPrimerArchivo,
-                Text("Columna Indice:"),
-                columnaIndicePrimerArchivo,
-                Text("Columnas:"),
-                especificarColumnasPrimerArchivo,
-            ]
-        ),
-        Row(
-             controls=[
-                Text("Eliminar valores N/A"),
-                quitarNaPrimerArchivo,
-                Text("Ignorar filas vacias"),
-                skipFilasVaciasPrimerArchivo,
-                botonCargarPrimerArchivo,
-                botonBorrarPrimerArchivo,
-            ]
-        ),
-        Divider(),
-        Row(
-            controls=[
-                botonSeleccionarSegundoArchivo,
-                segundoArchivoSeleccionado,
-                Text("Extension del archivo:"),
-                extensionSegundoArchivoSeleccionado,
-            ],
-        ),
-        Row(
-            controls=[
-                Text("Delimitador:"),
-                separadorSegundoArchivo,
-                Text("Header:"),
-                headerSegundoArchivo,
-                Text("Columna Indice:"),
-                columnaIndiceSegundoArchivo,
-                Text("Columnas:"),
-                especificarColumnasSegundoArchivo,
-            ]
-        ),
-        Row(
-             controls=[
-                Text("Eliminar valores N/A"),
-                quitarNaSegundoArchivo,
-                Text("Ignorar filas vacias"),
-                skipFilasVaciasSegundoArchivo,
-                botonCargarSegundoArchivo,
-                botonBorrarSegundoArchivo,
-            ]
-        ),
-        Divider(),
-        Row(
-            controls=[
-                botonConciliarArchivos,
-                botonGuardarConciliacion,
-                botonBorrarInputs
-            ]
-        ),
-        Row(
-            controls=[
-                columnaCamposPrimerArchivo,
-                columnaCamposSegundoArchivo,
+        Container(
+            expand=True,
+            image_src='imagen_fondo.jpg',
+            image_opacity=0.05,
+            image_fit= ImageFit.COVER,
+            padding= padding.all(30),
+            gradient=LinearGradient(
+                colors=[
+                    "#192543",
+                    "#27334f",
+                    "#192543"
+                ],
+                begin=alignment.center_left,
+                end=alignment.center_right
+            ),
+            content=Column(
+                scroll=ScrollMode.ALWAYS,
+                height=page.height,
+                controls=[
+                    Text("SECCION DEL PRIMER ARCHIVO", style=TextThemeStyle.HEADLINE_MEDIUM, color="lightblue"),
+                    Row(
+                        alignment = MainAxisAlignment.START,
+                        controls=[
+                            botonSeleccionarPrimerArchivo,
+                            primerArchivoSeleccionado,
+                            Text("Extension del archivo:"),
+                            extensionPrimerArchivoSeleccionado,
+                        ],
+                    ),
+                    Row(
+                        alignment = MainAxisAlignment.START,
+                        controls=[
+                            Text("Delimitador:"),
+                            separadorPrimerArchivo,
+                            Text("Fila de Titulos:"),
+                            headerPrimerArchivo,
+                            Text("Columna Indice:"),
+                            columnaIndicePrimerArchivo,
+                            Text("Campos a Leer:"),
+                            especificarColumnasPrimerArchivo,
+                        ]
+                    ),
+                    Row(
+                        alignment = MainAxisAlignment.START,
+                        controls=[
+                            Text("Eliminar valores N/A"),
+                            quitarNaPrimerArchivo,
+                            Text("Ignorar filas vacias"),
+                            skipFilasVaciasPrimerArchivo,
+                            botonCargarPrimerArchivo,
+                            botonBorrarPrimerArchivo,
+                        ]
+                    ),
+                    Divider(),
+                    Text("SECCION DEL SEGUNDO ARCHIVO", style=TextThemeStyle.HEADLINE_MEDIUM, color="lightblue"),
+                    Row(
+                        controls=[
+                            botonSeleccionarSegundoArchivo,
+                            segundoArchivoSeleccionado,
+                            Text("Extension del archivo:"),
+                            extensionSegundoArchivoSeleccionado,
+                        ],
+                    ),
+                    Row(
+                        controls=[
+                            Text("Delimitador:"),
+                            separadorSegundoArchivo,
+                            Text("Fila de Titulos:"),
+                            headerSegundoArchivo,
+                            Text("Columna Indice:"),
+                            columnaIndiceSegundoArchivo,
+                            Text("Campos a Leer:"),
+                            especificarColumnasSegundoArchivo,
+                        ]
+                    ),
+                    Row(
+                        controls=[
+                            Text("Eliminar valores N/A"),
+                            quitarNaSegundoArchivo,
+                            Text("Ignorar filas vacias"),
+                            skipFilasVaciasSegundoArchivo,
+                            botonCargarSegundoArchivo,
+                            botonBorrarSegundoArchivo,
+                        ]
+                    ),
+                    Divider(),
+                    Text("ANALISIS DE RESULTADOS", style=TextThemeStyle.HEADLINE_MEDIUM, color="lightblue"),
+                    Row(
+                        controls=[
+                            botonConciliarArchivos,
+                            botonGuardarConciliacion,
+                            botonBorrarInputs
+                        ]
+                    ),
+                    Row(
+                        controls=[
+                            columnaCamposPrimerArchivo,
+                            columnaCamposSegundoArchivo,
 
-            ]
+                        ]
+                    )
+                ]
+            )
         )
     )
 
