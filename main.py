@@ -45,7 +45,15 @@ def main(page: Page):
             return "-"
         else:
             return None
-
+        
+    def devolverValorSeparador(elemento):
+        if elemento.value == "Registros Coincidentes":
+            return "inner"
+        elif elemento.value == "Registros Disimiles":
+            return "outer"
+        else: 
+            return "inner"
+        
     def leerPrimerArchivo():
         global contadorDeArchivos
         if contadorDeArchivos < 2:
@@ -58,7 +66,7 @@ def main(page: Page):
         if extensionPrimerArchivoSeleccionado.value.upper() == ".CSV" or extensionPrimerArchivoSeleccionado.value.upper() == ".TXT":
             for i in listaEncodes:
                 try:
-                    df0 = pd.read_csv(primerArchivoSeleccionado.value, skip_blank_lines=skipFilasVaciasPrimerArchivo.value, na_filter=quitarNaPrimerArchivo.value, sep=devolverValorSeparador(separadorPrimerArchivo), encoding=i)
+                    df0 = pd.read_csv(primerArchivoSeleccionado.value, header=int(headerPrimerArchivo.value) if headerPrimerArchivo.value != '' else 0, skip_blank_lines=skipFilasVaciasPrimerArchivo.value, na_filter=quitarNaPrimerArchivo.value, sep=devolverValorSeparador(separadorPrimerArchivo), encoding=i)
                     if not columnaCamposPrimerArchivo.controls:
                         listarCamposPrimerArchivo(df0.columns)
                     return df0
@@ -67,7 +75,7 @@ def main(page: Page):
         if extensionPrimerArchivoSeleccionado.value.upper() == "XLSX":
             try:
                 columnasEspecificadas = especificarColumnasPrimerArchivo.value.split(',') if especificarColumnasPrimerArchivo.value else None
-                df0 = pd.read_excel(primerArchivoSeleccionado.value, na_filter=quitarNaPrimerArchivo.value, usecols=columnasEspecificadas if columnasEspecificadas else None)
+                df0 = pd.read_excel(primerArchivoSeleccionado.value, header=int(headerPrimerArchivo.value) if headerPrimerArchivo.value != '' else 0, na_filter=quitarNaPrimerArchivo.value, usecols=columnasEspecificadas if columnasEspecificadas else None)
                 if not columnaCamposPrimerArchivo.controls:
                     listarCamposPrimerArchivo(df0.columns)
                 return df0
@@ -86,7 +94,7 @@ def main(page: Page):
         if extensionSegundoArchivoSeleccionado.value.upper() == ".CSV" or extensionSegundoArchivoSeleccionado.value.upper() == ".TXT":
             for i in listaEncodes:
                 try:
-                    df1 = pd.read_csv(segundoArchivoSeleccionado.value, na_filter=quitarNaSegundoArchivo.value, skip_blank_lines=skipFilasVaciasSegundoArchivo.value, sep=devolverValorSeparador(separadorSegundoArchivo), encoding=i)
+                    df1 = pd.read_csv(segundoArchivoSeleccionado.value, header=int(headerSegundoArchivo.value) if headerSegundoArchivo.value != '' else 0, na_filter=quitarNaSegundoArchivo.value, skip_blank_lines=skipFilasVaciasSegundoArchivo.value, sep=devolverValorSeparador(separadorSegundoArchivo), encoding=i)
                     if not columnaCamposSegundoArchivo.controls:
                         listarCamposSegundoArchivo(df1.columns)
                     return df1
@@ -95,7 +103,7 @@ def main(page: Page):
         if extensionSegundoArchivoSeleccionado.value.upper() == "XLSX":
             try:
                 columnasEspecificadas = especificarColumnasSegundoArchivo.value.split(',') if especificarColumnasSegundoArchivo.value else None
-                df1 = pd.read_excel(segundoArchivoSeleccionado.value, na_filter=quitarNaSegundoArchivo.value,usecols=columnasEspecificadas if columnasEspecificadas else None)
+                df1 = pd.read_excel(segundoArchivoSeleccionado.value, header=int(headerSegundoArchivo.value) if headerSegundoArchivo.value != '' else 0, na_filter=quitarNaSegundoArchivo.value,usecols=columnasEspecificadas if columnasEspecificadas else None)
                 if not columnaCamposSegundoArchivo.controls:
                     listarCamposSegundoArchivo(df1.columns)
                 return df1
@@ -123,7 +131,14 @@ def main(page: Page):
 
     def conciliarAchivos():
         try:
+            botonGuardarConciliacion.disabled = False
+            botonBorrarInputs.disabled = False
+            botonConciliarArchivos.disabled = True
+            botonConciliarArchivos.update()
+            botonGuardarConciliacion.update()
+            botonBorrarInputs.update()
             camposConciliarPrimerArchivo = []
+
             for i in range(1,len(columnaCamposPrimerArchivo.controls)):
                 if columnaCamposPrimerArchivo.controls[i].controls[0].value == True:
                     camposConciliarPrimerArchivo.append(columnaCamposPrimerArchivo.controls[i].controls[1].value)
@@ -133,16 +148,15 @@ def main(page: Page):
                 if columnaCamposSegundoArchivo.controls[i].controls[0].value == True:
                     camposConciliarSegundoArchivo.append(columnaCamposSegundoArchivo.controls[i].controls[1].value)
 
-            dfConciliado = pd.merge(leerPrimerArchivo(), leerSegundoArchivo(), left_on=camposConciliarPrimerArchivo, right_on=camposConciliarSegundoArchivo, how='inner')
-            dfConciliado = dfConciliado.drop_duplicates().reset_index(drop=True)
-
-            botonGuardarConciliacion.disabled = False
-            botonBorrarInputs.disabled = False
-            botonConciliarArchivos.disabled = True
-            botonConciliarArchivos.update()
-            botonGuardarConciliacion.update()
-            botonBorrarInputs.update()
-            return dfConciliado
+            if dropTipoDeConciliacion.value == "Registros Disimiles":
+                dfConciliado = pd.merge(leerPrimerArchivo(), leerSegundoArchivo(), left_on=camposConciliarPrimerArchivo, right_on=camposConciliarSegundoArchivo,how='outer', indicator=True)
+                dfConciliado = dfConciliado[dfConciliado["_merge"].str.contains("_only")]
+                dfConciliado = dfConciliado.drop(['_merge'], axis=1)
+                return dfConciliado
+            else:
+                dfConciliado = pd.merge(leerPrimerArchivo(), leerSegundoArchivo(), left_on=camposConciliarPrimerArchivo, right_on=camposConciliarSegundoArchivo, how='inner')
+                dfConciliado = dfConciliado.drop_duplicates().reset_index(drop=True)
+                return dfConciliado
         except:
             AlertDialog(title="Error en Conciliacion", content=Text("No se pudieron conciliar los archivos"))
 
@@ -152,6 +166,15 @@ def main(page: Page):
         disabled=True,
         text="Conciliar",
         on_click=lambda _: conciliarAchivos(),
+    )
+
+    dropTipoDeConciliacion = Dropdown(
+        hint_text="Tipo de Conciliacion",
+        border_color="#ff9755",
+        options=[
+            dropdown.Option("Registros Coincidentes"),
+            dropdown.Option("Registros Disimiles"),
+        ]
     )
 
     botonGuardarConciliacion = ElevatedButton(
@@ -223,7 +246,7 @@ def main(page: Page):
 
     extensionPrimerArchivoSeleccionado = Text(size=20)
     separadorPrimerArchivo = Dropdown(options=separadoresComunes, hint_text="Seleccione el seperador",border_color="#ff9755")
-    headerPrimerArchivo = TextField(width=50, height=40, text_align="center", border_color="#ff9755")                               ## Aun no tiene funcion en la lectura de archivos
+    headerPrimerArchivo = TextField(width=50, height=40, text_align="center", border_color="#ff9755")
 
     columnaIndicePrimerArchivo = TextField(width=50, height=40, text_align="center", border_color="#ff9755")
     quitarNaPrimerArchivo = Checkbox(check_color="#192543", active_color="#ff9755")
@@ -453,11 +476,13 @@ def main(page: Page):
                     Row(
                         controls=[
                             botonConciliarArchivos,
+                            dropTipoDeConciliacion,
                             botonGuardarConciliacion,
                             botonBorrarInputs
                         ]
                     ),
                     Row(
+                        vertical_alignment = CrossAxisAlignment.START,
                         controls=[
                             columnaCamposPrimerArchivo,
                             columnaCamposSegundoArchivo,
